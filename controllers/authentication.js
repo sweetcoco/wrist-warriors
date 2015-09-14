@@ -1,5 +1,5 @@
-// var Joi = require('joi');
-// var User = require('../models/user').User;
+var Joi = require('joi');
+var User = require('../models/user').User;
 //
 // /**
 //  * Responds to POST /login and logs the user in, well, soon.
@@ -46,36 +46,118 @@
 // 	}
 // };
 //
-// /**
-//  * Responds to POST /register and creates a new user.
-//  */
-// exports.register = {
-// 	validate: {
-// 		payload: {
-//             email: Joi.string().email().required(),
-//             password: Joi.string().required()
-//         }
-// 	},
-// 	handler: function(request, reply) {
-//
-// 		// Create a new user, this is the place where you add firstName, lastName etc.
-// 		// Just don't forget to add them to the validator above.
-// 		var newUser = new User({
-// 			email: request.payload.email
-// 		});
-//
-// 		// The register function has been added by passport-local-mongoose and takes as first parameter
-// 		// the user object, as second the password it has to hash and finally a callback with user info.
-// 		User.register(newUser, request.payload.password, function(err, user) {
-// 			// Return error if present
-// 			if (err) {
-//                 return reply(err);
-//             }
-//
-//             reply().redirect('/login');
-//         });
-// 	}
-// };
+/**
+ * Responds to POST /api/v1/user and creates a new user.
+ */
+exports.createUser = {
+	validate: {
+		payload: {
+			typeOfCreate: Joi.string().required(), //is this real user creation, or ghost user? (real, fitbitGhost, googleFitGhost)
+            email: Joi.string().email().allow(null),
+            password: Joi.string().allow(null),
+			fitbitUserId: Joi.string().allow(null),
+			fitbitAccessToken: Joi.string().allow(null),
+			fitbitAccessTokenSecret: Joi.string().allow(null)
+        }
+	},
+	handler: function(request, reply) {
+		var newUser,
+			typeOfCreate = request.payload.typeOfCreate,
+			fitbitUserId = request.payload.fitbitUserId,
+			fitbitAccessToken = request.payload.fitbitAccessToken,
+			fitbitAccessTokenSecret = request.payload.fitbitAccessTokenSecret,
+			emailRand = Math.floor(Date.now() / 1000),
+			passwordRand = Math.floor(Date.now() / 1000) + Math.floor((Math.random() * 100) + 1);
+
+		if (typeOfCreate === 'fitbitGhost') {
+			newUser = new User ({
+				is_real: false,
+				credential_type: 	[{ fitbit: {
+										user_id: fitbitUserId,
+										access_token: fitbitAccessToken,
+										access_token_secret: fitbitAccessTokenSecret
+										}
+									}],
+				email: 'ghost' + emailRand + '@ghost.com'
+			});
+
+			User.register(newUser, 'passwordRand' + passwordRand, function(err, user) {
+				if (err) {
+					return reply(err);
+				}
+
+
+				reply({user:{
+					_id: newUser._id,
+					is_real: newUser.is_real,
+					credential_type: newUser.credential_type,
+					creation_date: newUser.creation_date
+				}});
+			});
+		}
+
+
+		// if (type === 'real') {
+		// 	// Create a new user, this is the place where you add firstName, lastName etc.
+		// 	// Just don't forget to add them to the validator above.
+		// 	newUser = new User({
+		// 		email: request.payload.email
+		// 	});
+		//
+		// 	// The register function has been added by passport-local-mongoose and takes as first parameter
+		// 	// the user object, as second the password it has to hash and finally a callback with user info.
+		// 	User.register(newUser, request.payload.password, function(err, user) {
+		// 		// Return error if present
+		// 		if (err) {
+	    //             return reply(err);
+	    //         }
+		//
+	    //         reply().redirect('/login');
+	    //     });
+		// }
+
+
+	}
+};
+
+
+
+/**
+ * Responds to POST /login and logs the user in.
+ */
+exports.login = {
+	validate: {
+		payload: {
+			typeOfLogin: Joi.string().required(), //is this real user login, or ghost user? (real, fitbitGhost, googleFitGhost)
+            email: Joi.string().email().allow(null),
+            password: Joi.string().allow(null),
+			fitbitUserId: Joi.string().allow(null),
+			fitbitAccessToken: Joi.string().allow(null),
+			fitbitAccessTokenSecret: Joi.string().allow(null)
+        }
+	},
+	handler: function(request, reply) {
+		var newUser,
+			typeOfLogin = request.payload.typeOfLogin,
+			fitbitUserId = request.payload.fitbitUserId,
+			fitbitAccessToken = request.payload.fitbitAccessToken,
+			fitbitAccessTokenSecret = request.payload.fitbitAccessTokenSecret;
+
+		if (typeOfLogin === 'fitbitGhost') {
+			User.findOne({'credential_type.fitbit.access_token_secret': fitbitAccessTokenSecret}, function (err, user) {
+				if (err) {
+					return reply(err);
+				}
+				reply({user:{
+					_id: user._id,
+					is_real: user.is_real,
+					credential_type: user.credential_type,
+					creation_date: user.creation_date
+				}});
+			});
+		}
+	}
+};
 
 
 

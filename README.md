@@ -3,10 +3,16 @@ Wrist Warriors
 
 ## Endpoints
 
-**PUT /api/v1/user/{user_id}**
-* requires payload: accessToken & accessTokenSecret.
-* optional payload: fullName.
-* Finds the user, updates tokens and returns them, or creates the user if does not exist.
+**POST /api/v1/user**
+* requires payload: typeOfCreate ('fitbitGhost' or 'real').
+* optional payload: fitbitUserId, fitbitAccessToken, fitbitAccessTokenSecret, email, password.
+* Creates a user best of the typeOfCreate. Returns the user.
+
+**Post /login**
+* requires payload: typeOfLogin ('fitbitGhost' or 'real'), fitbitAccessTokenSecret.
+* the app will need to store the old token secret and login with that THEN update the token secret. if you update first you won't be able to login as the server doesn't know the new token. (can't update user yet).
+* returns the user.
+
 
 ===========
 

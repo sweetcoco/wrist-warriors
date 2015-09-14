@@ -7,9 +7,11 @@ var Api = require('./controllers/api');
  * that take care of the actions
  */
 exports.endpoints = [
-	{ method: 'GET',    path: '/fitAuth',        	 			config: Authentication.fitAuth 		},
-	{ method: 'GET',    path: '/authorized',         			config: Authentication.authorized 	},
+	{ method: 'GET',    path: '/fitAuth',        	 			config: Authentication.fitAuth 			},
+	{ method: 'GET',    path: '/authorized',         			config: Authentication.authorized 		},
 
-	{ method: 'PUT',    path: '/api/v1/user/{user_id}',         config: Api.initUser					},
+	{ method: 'POST',   path: '/login',       					config: Authentication.login			},
+	{ method: 'POST',   path: '/api/v1/user',       			config: Authentication.createUser		},
+	{ method: 'PUT',    path: '/api/v1/user/{user_id}',        	config: Api.initUser					},
 
 ];
