@@ -3,7 +3,10 @@ Wrist Warriors
 
 ## Endpoints
 
-/fitAuth prompts the user to accept
+**PUT /api/v1/user/{user_id}**
+* requires payload: accessToken & accessTokenSecret.
+optional payload: fullName.
+Finds the user, updates tokens and returns them, or creates the user if does not exist. *
 
 ===========
 

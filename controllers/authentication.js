@@ -128,6 +128,8 @@ exports.authorized = {
 			var accessToken = results[0],
 				accessTokenSecret = results[1],
 				userId = results[2].encoded_user_id;
+				console.log(results);
+
 
 				// https://api.fitbit.com/1/user/[user-id] already appended to url, in this case "/profile.json"
 				// /activities/steps/date/today/1d.json  -returns steps for a day

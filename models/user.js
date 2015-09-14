@@ -2,12 +2,12 @@ var Mongoose = require('../database').Mongoose;
 
 //create the schema
 var userSchema = new Mongoose.Schema({
-	email: 	      { type: String,	required: true },
-	password:     { type: String,	required: true },
-	creationDate: { type: Date,		required: true, default: Date.now },
+	user_id: 	  			{ type: String},
+	full_name: 				{ type: String},
+	access_token:			{ type: String},
+	access_token_secret:	{ type: String},
+	creation_date: 			{ type: Date,		required: true, default: Date.now },
 });
-
-userSchema.plugin(require('passport-local-mongoose'), { usernameField: 'email', hashField: 'password', usernameLowerCase: true });
 
 //create the model and add it to the exports
 var User = exports.User = Mongoose.model('User', userSchema, 'Users');
