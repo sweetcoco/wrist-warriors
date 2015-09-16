@@ -1,53 +1,35 @@
-// var Config = require('../config');
-// var Joi = require('joi');
-// var User = require('../models/user').User;
-// var FitbitApiClient = require("fitbit-node");
-// var client = new FitbitApiClient(Config.fitAuth.consumerKey, Config.fitAuth.consumerSecret);
-//
-// var requestTokenSecrets = {};
-//
-// /**
-//  * Responds to PUT /api/v1/user/user_id and returns the user account.
-//  */
-// exports.initUser = {
-// 	validate: {
-// 		payload: {
-// 			fullName: Joi.string().allow(null),
-//             accessToken: Joi.string().required(),
-// 			accessTokenSecret: Joi.string().required()
-//         }
-// 	},
-// 	handler: function (request, reply) {
-// 		var userId = encodeURIComponent(request.params.user_id),
-// 			fullName = request.payload.fullName,
-// 			accessToken = request.payload.accessToken,
-// 			accessTokenSecret = request.payload.accessTokenSecret;
-//
-// 		User.findOneAndUpdate({'user_id': userId}, {access_token: accessToken, access_token_secret: accessTokenSecret}, function (err, user) {
-// 			if (err) {
-// 				reply(err);
-// 				return;
-// 			}
-//
-// 			if (!user) {
-// 				var newUser = new User({
-// 					user_id: userId,
-// 					full_name: fullName,
-// 					access_token: accessToken,
-// 					access_token_secret: accessTokenSecret,
-// 				});
-//
-// 				newUser.save(function (err) {
-// 					if (err) {
-// 						reply(err);
-// 						return;
-// 					}
-// 					user = newUser;
-// 				});
-// 				return reply({user:newUser});
-// 			}
-//
-// 			return reply({user:user});
-// 		});
-// 	}
-// };
+var Config = require('../config');
+var Joi = require('joi');
+var User = require('../models/user').User;
+
+
+/**
+ * Handles a call to /api/users/{userId} and updates the user
+ */
+exports.updateUser = {
+	auth: 'session',
+	validate: {
+        payload: {
+            fitbitToken: {
+				token: {
+					token: {
+						access_token: Joi.string().required(),
+						expires_in: Joi.number().required(),
+						refresh_token: Joi.string().required(),
+						scope: Joi.string().required(),
+						token_type: Joi.string().required(),
+						user_id: Joi.string().required(),
+						expires_at: Joi.string().required()
+					}
+				}
+			}
+        }
+    },
+	handler: function (request, reply) {
+		console.log(request.payload);
+		User.findByIdAndUpdate(request.params.user_id, { credential_type: { fitbit: request.payload.fitbitToken } }, function(err, user) {
+			if (err) return reply(err);
+			return reply({user:user});
+		});
+  	}
+};

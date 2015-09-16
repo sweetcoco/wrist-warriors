@@ -50,6 +50,24 @@ var User = require('../models/user').User;
  * Responds to POST /api/v1/user and creates a new user.
  */
 exports.createUser = {
+	validate: {
+        payload: {
+            typeOfCreate: Joi.string().required(),
+            fitbitToken: {
+				token: {
+					token: {
+						access_token: Joi.string().required(),
+						expires_in: Joi.number().required(),
+						refresh_token: Joi.string().required(),
+						scope: Joi.string().required(),
+						token_type: Joi.string().required(),
+						user_id: Joi.string().required(),
+						expires_at: Joi.string().required()
+					}
+				}
+			}
+        }
+    },
 	handler: function(request, reply) {
 		var newUser,
 			typeOfCreate = request.payload.typeOfCreate,
@@ -80,6 +98,24 @@ exports.createUser = {
  * Responds to POST /login and logs the user in.
  */
 exports.login = {
+	validate: {
+        payload: {
+            typeOfLogin: Joi.string().required(),
+            fitbitToken: {
+				token: {
+					token: {
+						access_token: Joi.string().required(),
+						expires_in: Joi.number().required(),
+						refresh_token: Joi.string().required(),
+						scope: Joi.string().required(),
+						token_type: Joi.string().required(),
+						user_id: Joi.string().required(),
+						expires_at: Joi.string().required()
+					}
+				}
+			}
+        }
+    },
 	handler: function(request, reply) {
 		var newUser,
 			typeOfLogin = request.payload.typeOfLogin,

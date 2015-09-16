@@ -8,6 +8,10 @@ Wrist Warriors
 * requires payload: fitbitToken.
 * Create the user.
 
+**PUT /api/v1/user**
+* requires payload: fitbitToken.
+* update the fitbit token. Must have session authenticated.
+
 **POST /login**
 * requires payload: typeOfLogin "fitbit".
 * requires payload: fitbitToken.
@@ -31,7 +35,6 @@ Wrist Warriors
 ```
 
 The session is set upon creation and login... cannot logout yet. lol.
-The user cannot be updated yet.
 
 ===========
 
