@@ -13,7 +13,7 @@
     "hapi": "^8.2.0",
     "hapi-auth-cookie": "^2.0.0",
     "joi": "^4.6.2",
-    "mongoose": "^3.8.24",
+    "mongoose": "^4.1.7",
     "passport-local-mongoose": "^0.3.0"
   }
 }
