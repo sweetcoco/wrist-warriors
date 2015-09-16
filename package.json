@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "fitbit-node": "^1.0.0",
+    "fitbit-client-oauth2": "^2.0.0",
     "hapi": "^8.2.0",
     "hapi-auth-cookie": "^2.0.0",
     "joi": "^4.6.2",

@@ -12,6 +12,6 @@ exports.endpoints = [
 
 	{ method: 'POST',   path: '/login',       					config: Authentication.login			},
 	{ method: 'POST',   path: '/api/v1/user',       			config: Authentication.createUser		},
-	{ method: 'PUT',    path: '/api/v1/user/{user_id}',        	config: Api.initUser					},
+	//{ method: 'PUT',    path: '/api/v1/user/{user_id}',        	config: Api.initUser					},
 
 ];

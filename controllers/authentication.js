@@ -50,73 +50,27 @@ var User = require('../models/user').User;
  * Responds to POST /api/v1/user and creates a new user.
  */
 exports.createUser = {
-	validate: {
-		payload: {
-			typeOfCreate: Joi.string().required(), //is this real user creation, or ghost user? (real, fitbitGhost, googleFitGhost)
-            email: Joi.string().email().allow(null),
-            password: Joi.string().allow(null),
-			fitbitUserId: Joi.string().allow(null),
-			fitbitAccessToken: Joi.string().allow(null),
-			fitbitAccessTokenSecret: Joi.string().allow(null)
-        }
-	},
 	handler: function(request, reply) {
 		var newUser,
 			typeOfCreate = request.payload.typeOfCreate,
-			fitbitUserId = request.payload.fitbitUserId,
-			fitbitAccessToken = request.payload.fitbitAccessToken,
-			fitbitAccessTokenSecret = request.payload.fitbitAccessTokenSecret,
-			emailRand = Math.floor(Date.now() / 1000),
-			passwordRand = Math.floor(Date.now() / 1000) + Math.floor((Math.random() * 100) + 1);
+			fitbitToken = request.payload.fitbitToken;
 
-		if (typeOfCreate === 'fitbitGhost') {
+		if (typeOfCreate === 'fitbit') {
 			newUser = new User ({
-				is_real: false,
-				credential_type: 	[{ fitbit: {
-										user_id: fitbitUserId,
-										access_token: fitbitAccessToken,
-										access_token_secret: fitbitAccessTokenSecret
-										}
-									}],
-				email: 'ghost' + emailRand + '@ghost.com'
+				account_type: "fitbit",
+				credential_type:[{
+									fitbit: fitbitToken
+								}],
+				password: "",
+				email: "",
 			});
 
-			User.register(newUser, 'passwordRand' + passwordRand, function(err, user) {
-				if (err) {
-					return reply(err);
-				}
+			newUser.save();
 
+			request.auth.session.set(newUser);
 
-				reply({user:{
-					_id: newUser._id,
-					is_real: newUser.is_real,
-					credential_type: newUser.credential_type,
-					creation_date: newUser.creation_date
-				}});
-			});
+			reply({user: newUser});
 		}
-
-
-		// if (type === 'real') {
-		// 	// Create a new user, this is the place where you add firstName, lastName etc.
-		// 	// Just don't forget to add them to the validator above.
-		// 	newUser = new User({
-		// 		email: request.payload.email
-		// 	});
-		//
-		// 	// The register function has been added by passport-local-mongoose and takes as first parameter
-		// 	// the user object, as second the password it has to hash and finally a callback with user info.
-		// 	User.register(newUser, request.payload.password, function(err, user) {
-		// 		// Return error if present
-		// 		if (err) {
-	    //             return reply(err);
-	    //         }
-		//
-	    //         reply().redirect('/login');
-	    //     });
-		// }
-
-
 	}
 };
 
@@ -126,34 +80,22 @@ exports.createUser = {
  * Responds to POST /login and logs the user in.
  */
 exports.login = {
-	validate: {
-		payload: {
-			typeOfLogin: Joi.string().required(), //is this real user login, or ghost user? (real, fitbitGhost, googleFitGhost)
-            email: Joi.string().email().allow(null),
-            password: Joi.string().allow(null),
-			fitbitUserId: Joi.string().allow(null),
-			fitbitAccessToken: Joi.string().allow(null),
-			fitbitAccessTokenSecret: Joi.string().allow(null)
-        }
-	},
 	handler: function(request, reply) {
 		var newUser,
 			typeOfLogin = request.payload.typeOfLogin,
-			fitbitUserId = request.payload.fitbitUserId,
-			fitbitAccessToken = request.payload.fitbitAccessToken,
-			fitbitAccessTokenSecret = request.payload.fitbitAccessTokenSecret;
+			fitbitToken = request.payload.fitbitToken,
+			fitbitUserId = fitbitToken.token.token.user_id;
 
-		if (typeOfLogin === 'fitbitGhost') {
-			User.findOne({'credential_type.fitbit.access_token_secret': fitbitAccessTokenSecret}, function (err, user) {
+		if (typeOfLogin === 'fitbit') {
+			User.findOne({'credential_type.fitbit.token.token.user_id': fitbitUserId}, function (err, user) {
 				if (err) {
 					return reply(err);
 				}
-				reply({user:{
-					_id: user._id,
-					is_real: user.is_real,
-					credential_type: user.credential_type,
-					creation_date: user.creation_date
-				}});
+
+				if (user) {
+					request.auth.session.set(user);
+					return reply({user: user});
+				}
 			});
 		}
 	}
@@ -163,35 +105,21 @@ exports.login = {
 
 
 
-
-
-
-
-
-
-
-
-
-
 var Config = require('../config');
-var FitbitApiClient = require("fitbit-node");
-var client = new FitbitApiClient(Config.fitAuth.consumerKey, Config.fitAuth.consumerSecret);
-
-var requestTokenSecrets = {};
+var FitbitClient = require('fitbit-client-oauth2');
+var client = new FitbitClient(Config.fitAuth.appId, Config.fitAuth.consumerSecret);
+// var redirect_uri = 'https://www.fitbit.com/oauth2/success' /*'http://localhost:8000/authorized'*/;
+var redirect_uri = 'http://localhost:8000/authorized';
+var scope =  [ 'activity', 'nutrition', 'profile', 'settings', 'sleep', 'social', 'weight' ];
 
 /**
  * Responds to GET /fitAuth and and is the first stage of auth.
  */
 exports.fitAuth = {
 	handler: function (request, reply) {
+		var authorization_uri = client.getAuthorizationUrl(redirect_uri, scope);
 
-		client.getRequestToken().then(function (results) {
-			var token = results[0],
-				secret = results[1];
-			requestTokenSecrets[token] = secret;
-
-			reply().redirect("http://www.fitbit.com/oauth/authorize?oauth_token=" + token); // change authorize to authenticate to not prompt every time
-		});
+		reply().redirect(authorization_uri);
 	}
 };
 
@@ -202,23 +130,22 @@ exports.fitAuth = {
 exports.authorized = {
 	handler: function (request, reply) {
 
-		var token = request.query.oauth_token,
-			secret = requestTokenSecrets[token],
-			verifier = request.query.oauth_verifier;
+		var code = request.query.code;
 
-		client.getAccessToken(token, secret, verifier).then(function (results) {
-			var accessToken = results[0],
-				accessTokenSecret = results[1],
-				userId = results[2].encoded_user_id;
-				console.log(results);
+		client.getToken(code, redirect_uri)
+            .then(function(token) {
 
+                // ... save your token on db or session...
 
-				// https://api.fitbit.com/1/user/[user-id] already appended to url, in this case "/profile.json"
-				// /activities/steps/date/today/1d.json  -returns steps for a day
-			return client.get("/profile.json", accessToken, accessTokenSecret).then(function (results) {
-				var response = results[0];
-				reply(response);
-			});
-		});
+                // then redirect
+                //reply.redirect(302, '/user');
+				reply({token:token});
+
+            })
+            .catch(function(err) {
+                // something went wrong.
+                reply(err);
+
+            });
 	}
 };

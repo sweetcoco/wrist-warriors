@@ -4,15 +4,34 @@ Wrist Warriors
 ## Endpoints
 
 **POST /api/v1/user**
-* requires payload: typeOfCreate ('fitbitGhost' or 'real').
-* optional payload: fitbitUserId, fitbitAccessToken, fitbitAccessTokenSecret, email, password.
-* Creates a user best of the typeOfCreate. Returns the user.
+* requires payload: typeOfCreate: "fitbit".
+* requires payload: fitbitToken.
+* Create the user.
 
-**Post /login**
-* requires payload: typeOfLogin ('fitbitGhost' or 'real'), fitbitAccessTokenSecret.
-* the app will need to store the old token secret and login with that THEN update the token secret. if you update first you won't be able to login as the server doesn't know the new token. (can't update user yet).
+**POST /login**
+* requires payload: typeOfLogin "fitbit".
+* requires payload: fitbitToken.
 * returns the user.
 
+**fitbitToken:**
+```
+{
+    token: {
+        token: {
+            access_token: String,
+            expires_in: Number,
+            refresh_token: String,
+            scope: String,
+            token_type: String,
+            user_id: String,
+            expires_at: String
+        }
+    }
+}
+```
+
+The session is set upon creation and login... cannot logout yet. lol.
+The user cannot be updated yet.
 
 ===========
 
