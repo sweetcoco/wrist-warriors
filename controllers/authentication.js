@@ -131,11 +131,25 @@ exports.login = {
 				if (user) {
 					request.auth.session.set(user);
 					return reply({user: user});
+				} else {
+					return reply({error: "fitbit user_id does not exist"});
 				}
 			});
 		}
 	}
 };
+
+/**
+ * Responds to GET /logout and logs out the user
+ */
+exports.logout = {
+	auth: 'session',
+	handler: function (request, reply) {
+		request.auth.session.clear();
+		reply({message: "logged out"});
+	}
+};
+
 
 
 
@@ -155,7 +169,7 @@ exports.fitAuth = {
 	handler: function (request, reply) {
 		var authorization_uri = client.getAuthorizationUrl(redirect_uri, scope);
 
-		var new_authorization_uri = authorization_uri.replace("api.", ""); // cheap fix for fitbit-client-oauth2 workaround, doesn't go to correct site for auth as of version 2.0.0
+		var new_authorization_uri = authorization_uri.replace("https://api.", "https://"); // cheap fix for fitbit-client-oauth2 workaround, doesn't go to correct site for auth as of version 2.0.0
 		reply().redirect(new_authorization_uri);
 	}
 };
