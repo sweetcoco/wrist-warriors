@@ -155,7 +155,8 @@ exports.fitAuth = {
 	handler: function (request, reply) {
 		var authorization_uri = client.getAuthorizationUrl(redirect_uri, scope);
 
-		reply().redirect(authorization_uri);
+		var new_authorization_uri = authorization_uri.replace("api.", ""); // cheap fix for fitbit-client-oauth2 workaround, doesn't go to correct site for auth as of version 2.0.0
+		reply().redirect(new_authorization_uri);
 	}
 };
 
