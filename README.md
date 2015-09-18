@@ -4,18 +4,22 @@ Wrist Warriors
 ## Endpoints
 
 **POST /api/v1/user**
+* Create the user.
 * requires payload: typeOfCreate: "fitbit".
 * requires payload: fitbitToken.
-* Create the user.
 
 **PUT /api/v1/user**
-* requires payload: fitbitToken.
 * update the fitbit token. Must have session authenticated.
+* requires payload: fitbitToken.
 
 **POST /login**
+* returns the user.
 * requires payload: typeOfLogin "fitbit".
 * requires payload: fitbitToken.
-* returns the user.
+
+**POST /logout**
+* destroys the session.
+* returns `{message: "logged out"}` 
 
 **fitbitToken:**
 ```
